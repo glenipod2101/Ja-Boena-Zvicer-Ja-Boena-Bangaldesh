@@ -2,10 +2,25 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from functions import calculate_profit
+def calculate_profit(row, selected_team):
+    """
+    Calculate profit based on betting on selected team to win
+    - If selected team plays HOME and wins (FTR='H'): profit using 1XBH odds
+    - If selected team plays AWAY and wins (FTR='A'): profit using 1XBA odds  
+    - If selected team loses or draws: -100 loss
+    """
+    if row['HomeTeam'] == selected_team and row['FTR'] == 'H':
+        # Our team played home and won
+        return ((100 * row['1XBH']) - 100)
+    elif row['AwayTeam'] == selected_team and row['FTR'] == 'A':
+        # Our team played away and won
+        return ((100 * row['1XBA']) - 100)
+    else:
+        # Our team lost or drew
+        return -100
 
 def main():
-    st.title("⚽ Football Betting Analysis")
+    st.title("Football Betting Analysis")
     st.markdown("Upload your CSV file and analyze betting profits for any team!")
     
     # File upload
@@ -16,7 +31,7 @@ def main():
             # Read the CSV
             df = pd.read_csv(uploaded_file)
             
-            st.success(f"✅ File uploaded successfully! {len(df)} matches found.")
+            st.success(f"File uploaded successfully! {len(df)} matches found.")
             
             # Show basic info about the dataset
             st.subheader("Dataset Overview")
@@ -28,7 +43,7 @@ def main():
             missing_columns = [col for col in required_columns if col not in df.columns]
             
             if missing_columns:
-                st.error(f"❌ Missing required columns: {', '.join(missing_columns)}")
+                st.error(f"Missing required columns: {', '.join(missing_columns)}")
                 st.info("Required columns: HomeTeam, AwayTeam, FTR, 1XBH, 1XBA")
                 return
             
@@ -61,7 +76,7 @@ def main():
                 )
                 
                 # Display results
-                st.subheader(f"📊 Results for {selected_team}")
+                st.subheader(f"Results for {selected_team}")
                 
                 # Summary statistics
                 col1, col2, col3, col4 = st.columns(4)
@@ -81,7 +96,7 @@ def main():
                     st.metric("Win Rate", f"{win_rate:.1f}%")
                 
                 # Detailed breakdown
-                st.subheader("📈 Detailed Breakdown")
+                st.subheader("Detailed Breakdown")
                 
                 # Home vs Away performance
                 home_matches = team_matches[team_matches['Home_or_Away'] == 'Home']
@@ -90,7 +105,7 @@ def main():
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.write("**🏠 Home Performance**")
+                    st.write("**Home Performance**")
                     if len(home_matches) > 0:
                         home_profit = home_matches['Profit'].sum()
                         home_wins = len(home_matches[home_matches['Profit'] > 0])
@@ -102,7 +117,7 @@ def main():
                         st.write("No home matches found")
                 
                 with col2:
-                    st.write("**🚗 Away Performance**")
+                    st.write("**Away Performance**")
                     if len(away_matches) > 0:
                         away_profit = away_matches['Profit'].sum()
                         away_wins = len(away_matches[away_matches['Profit'] > 0])
@@ -114,7 +129,7 @@ def main():
                         st.write("No away matches found")
                 
                 # Show detailed results table
-                st.subheader("📋 Match Details")
+                st.subheader("Match Details")
                 
                 # Select columns to display
                 display_columns = []
@@ -131,7 +146,7 @@ def main():
                 )
                 
                 # Download results
-                st.subheader("💾 Download Results")
+                st.subheader("Download Results")
                 csv = team_matches[display_columns].to_csv(index=False)
                 st.download_button(
                     label=f"Download {selected_team} betting results as CSV",
@@ -141,7 +156,7 @@ def main():
                 )
                 
         except Exception as e:
-            st.error(f"❌ Error processing file: {str(e)}")
+            st.error(f"Error processing file: {str(e)}")
             st.info("Please make sure your CSV file has the correct format and required columns.")
 
 if __name__ == "__main__":
